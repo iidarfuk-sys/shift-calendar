@@ -343,7 +343,19 @@ function clearPresets(){document.querySelectorAll('.preset-btn').forEach(functio
 
 function handleSubmit(){
   var okN=0,maybeN=0,ngN=0,days=[];
-  for(var k in dayData){var v=dayData[k];if(v.status==='ok')okN++;if(v.status==='maybe')maybeN++;if(v.status==='ng')ngN++;days.push({date:k,status:v.status,start:v.start||'',end:v.end||''});}
+  // その月の全日付を生成して送信
+  var lastDate=new Date(currentYear,currentMonth,0).getDate();
+  for(var d=1;d<=lastDate;d++){
+    var ds=currentYear+'-'+pad(currentMonth)+'-'+pad(d);
+    var v=dayData[ds];
+    var status=v?v.status:'none';
+    var start=v?v.start||'':'';
+    var end=v?v.end||'':'';
+    if(status==='ok')okN++;
+    if(status==='maybe')maybeN++;
+    if(status==='ng')ngN++;
+    days.push({date:ds,status:status,start:start,end:end});
+  }
   var note=document.getElementById('global-note').value;
   var ym=currentYear+'-'+pad(currentMonth);
   document.getElementById('cnt-ok').textContent=okN;
