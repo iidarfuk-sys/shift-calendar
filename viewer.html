@@ -124,7 +124,6 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
   <div class="header-top">
     <div class="header-title">📋 シフト管理</div>
     <button class="reload-btn" onclick="loadData()">再読込</button>
-    <button class="reload-btn" onclick="showDebug()" style="margin-left:6px;">デバッグ</button>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
     <div class="month-nav">
@@ -212,12 +211,6 @@ function loadData(){
 function showError(msg){
   var el=document.getElementById('error');
   el.textContent=msg; el.style.display='block';
-}
-
-function showDebug(){
-  if(rawData.length===0){ alert('rawData空です'); return; }
-  var r=rawData[0];
-  alert('件数:'+rawData.length+'\n1行目:\nname=['+r.name+']\nyearMonth=['+r.yearMonth+']\ndate=['+r.date+']\nstatus=['+r.status+']');
 }
 
 // データをname×dateでインデックス化
