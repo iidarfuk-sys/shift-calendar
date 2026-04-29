@@ -91,7 +91,7 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
 .bl-ok    { background:var(--green-pale); color:var(--green); }
 .bl-maybe { background:var(--amber-pale); color:var(--amber); }
 .bl-ng    { background:var(--red-pale);   color:var(--red); }
-.bl-none  { border:1.5px dashed #ddd; }
+.bl-none  { display:none; }
 
 /* 個人モードのスタッフ選択 */
 .single-view { padding:12px; }
@@ -331,6 +331,7 @@ function buildCalendarAll(idx){
     STAFF.forEach(function(name){
       var v=(idx[name]||{})[ds];
       var sc=statusChar(v?v.status:'');
+      if(sc.cls==='b-none') return; // 空白は表示しない
       html+='<div class="staff-row"><span class="staff-name-mini">'+name[0]+'</span><span class="badge-mini '+sc.cls+'">'+sc.ch+'</span></div>';
     });
     html+='</div></div>';
