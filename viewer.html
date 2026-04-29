@@ -218,9 +218,21 @@ function buildIndex(){
   var idx={};
   var ym=currentYear+'-'+pad(currentMonth);
   rawData.forEach(function(row){
-    if(row.yearMonth!==ym) return;
+    // yearMonthの比較（2026-05形式に正規化して比較）
+    var rowYm = String(row.yearMonth).trim().replace(/^(\d{4})\/(\d{2}).*$/,'$1-$2');
+    if(rowYm !== ym) return;
+    // dateを YYYY-MM-DD 形式に正規化
+    var rawDate = String(row.date).trim();
+    var dateKey;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(rawDate)){
+      dateKey = rawDate;
+    } else if(/^\d{4}\/\d{2}\/\d{2}$/.test(rawDate)){
+      dateKey = rawDate.replace(/\//g,'-');
+    } else {
+      dateKey = rawDate;
+    }
     if(!idx[row.name]) idx[row.name]={};
-    idx[row.name][row.date]={status:row.status, start:row.start, end:row.end, note:row.note};
+    idx[row.name][dateKey]={status:row.status, start:row.start, end:row.end, note:row.note};
   });
   return idx;
 }
