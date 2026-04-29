@@ -48,7 +48,7 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
   display:flex; align-items:center; justify-content:center;
   font-size:16px; font-weight:700; color:var(--green); flex-shrink:0;
 }
-.saved-badge { font-size:11px; color:var(--green); margin-left:auto; }
+
 
 #screen-calendar.active { display:block; padding-bottom:100px; }
 .cal-header { background:var(--green); color:#fff; padding:18px 16px 14px; position:sticky; top:0; z-index:10; }
@@ -218,7 +218,7 @@ var currentName='', currentYear=0, currentMonth=0, dayData={}, editingDate='';
 
 function lsSave(){try{localStorage.setItem('sh_'+currentName+'_'+currentYear+'_'+currentMonth,JSON.stringify(dayData));}catch(e){}}
 function lsLoad(n,y,m){try{var v=localStorage.getItem('sh_'+n+'_'+y+'_'+m);return v?JSON.parse(v):{};}catch(e){return {};}}
-function lsHas(n){try{for(var k in localStorage){if(k.indexOf('sh_'+n+'_')===0)return true;}return false;}catch(e){return false;}}
+
 
 function showScreen(id){
   ['screen-name','screen-calendar','screen-done'].forEach(function(s){
@@ -236,7 +236,7 @@ function buildNameList(){
     var av=document.createElement('div'); av.className='name-avatar'; av.textContent=name[0];
     var nm=document.createElement('span'); nm.textContent=name;
     btn.appendChild(av); btn.appendChild(nm);
-    if(lsHas(name)){var bd=document.createElement('span');bd.className='saved-badge';bd.textContent='保存済';btn.appendChild(bd);}
+
     btn.onclick=function(){startCalendar(name);};
     list.appendChild(btn);
   });
