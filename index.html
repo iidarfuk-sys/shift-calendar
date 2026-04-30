@@ -355,7 +355,6 @@ function buildNameList(){
     var av=document.createElement('div'); av.className='name-avatar'; av.textContent=name[0];
     var nm=document.createElement('span'); nm.textContent=name;
     btn.appendChild(av); btn.appendChild(nm);
-    if(lsHas(name)){var bd=document.createElement('span');bd.className='saved-badge';bd.textContent='保存済';btn.appendChild(bd);}
     btn.onclick=function(){startCalendar(name);};
     list.appendChild(btn);
   });
@@ -495,17 +494,10 @@ function schChangeMonth(d){
 function loadSchedule(){
   document.getElementById('sch-month').textContent=schYear+'年'+schMonth+'月';
   var ym=schYear+'-'+pad(schMonth);
-  // GASから確定シフトを取得（明日GAS対応後に有効化）
-  // 現時点では空データで表示
-  schData=[];
-  renderSchedule();
-
-  /* GAS対応後はこちらを使用:
-  fetch(GAS_URL+'?type=confirmed&yearMonth='+ym)
+  fetch(GAS_URL+'?type=kakutei&yearMonth='+ym)
     .then(function(r){return r.json();})
     .then(function(d){schData=d.data||[];renderSchedule();})
-    .catch(function(){renderSchedule();});
-  */
+    .catch(function(){schData=[];renderSchedule();});
 }
 
 function buildSchTabs(){
