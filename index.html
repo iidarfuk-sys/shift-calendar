@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>シフト希望カレンダー</title>
+<title>シフト管理</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -23,18 +23,46 @@
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
-
 .screen { display:none; }
 .screen.active { display:block; }
 
+/* ── トップ画面 ── */
+#screen-top.active {
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  min-height:100vh; padding:40px 24px;
+}
+.top-logo { font-size:11px; letter-spacing:.3em; color:var(--muted); text-transform:uppercase; margin-bottom:10px; }
+.top-title { font-size:28px; font-weight:700; color:var(--green); margin-bottom:6px; text-align:center; }
+.top-sub { font-size:13px; color:var(--muted); margin-bottom:48px; text-align:center; }
+.top-buttons { display:flex; flex-direction:column; gap:14px; width:100%; max-width:320px; }
+.top-btn {
+  padding:22px 20px; border-radius:var(--r); border:none; cursor:pointer;
+  font-family:'Noto Sans JP',sans-serif; font-size:15px; font-weight:700;
+  display:flex; align-items:center; gap:14px; text-align:left;
+  transition:all .18s;
+}
+.top-btn:active { transform:scale(.98); }
+.top-btn-primary { background:var(--green); color:#fff; }
+.top-btn-secondary { background:var(--card); color:var(--text); border:2px solid var(--border); }
+.top-btn-icon { font-size:24px; flex-shrink:0; }
+.top-btn-text { display:flex; flex-direction:column; gap:3px; }
+.top-btn-label { font-size:15px; font-weight:700; }
+.top-btn-desc { font-size:11px; opacity:.7; font-weight:400; }
+
+/* ── 名前選択 ── */
 #screen-name.active {
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
   min-height:100vh; padding:32px 20px;
 }
-.logo { font-size:11px; letter-spacing:.3em; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
-.screen-title { font-size:26px; font-weight:700; color:var(--green); margin-bottom:6px; text-align:center; }
-.screen-sub { font-size:13px; color:var(--muted); margin-bottom:36px; text-align:center; }
+.page-header {
+  display:flex; align-items:center; gap:10px;
+  margin-bottom:28px; width:100%; max-width:340px;
+}
+.pg-back { background:var(--green-pale); border:none; color:var(--green); width:34px; height:34px; border-radius:8px; font-size:16px; cursor:pointer; flex-shrink:0; }
+.pg-title { font-size:16px; font-weight:700; color:var(--green); }
+.screen-sub { font-size:13px; color:var(--muted); margin-bottom:24px; text-align:center; }
 .name-list { display:flex; flex-direction:column; gap:10px; width:100%; max-width:340px; }
 .name-card {
   background:var(--card); border:2px solid var(--border); border-radius:var(--r);
@@ -43,32 +71,24 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
   font-family:'Noto Sans JP',sans-serif; color:var(--text);
 }
 .name-card:active { background:var(--green-pale); border-color:var(--green2); }
-.name-avatar {
-  width:38px; height:38px; background:var(--green-pale); border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-size:16px; font-weight:700; color:var(--green); flex-shrink:0;
-}
+.name-avatar { width:38px; height:38px; background:var(--green-pale); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:var(--green); flex-shrink:0; }
+.saved-badge { font-size:11px; color:var(--green); margin-left:auto; }
 
-
+/* ── 希望入力カレンダー ── */
 #screen-calendar.active { display:block; padding-bottom:100px; }
 .cal-header { background:var(--green); color:#fff; padding:18px 16px 14px; position:sticky; top:0; z-index:10; }
 .cal-header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-.back-btn {
-  background:rgba(255,255,255,.2); border:none; color:#fff;
-  width:36px; height:36px; border-radius:8px; font-size:18px; cursor:pointer;
-}
+.back-btn { background:rgba(255,255,255,.2); border:none; color:#fff; width:36px; height:36px; border-radius:8px; font-size:18px; cursor:pointer; }
 .cal-title { text-align:center; flex:1; }
 .cal-who { font-size:12px; opacity:.75; }
 .cal-month-txt { font-size:22px; font-weight:700; }
 .month-nav { display:flex; gap:6px; }
 .month-btn { background:rgba(255,255,255,.2); border:none; color:#fff; width:36px; height:36px; border-radius:8px; font-size:20px; cursor:pointer; }
 .legend { display:flex; gap:12px; justify-content:center; font-size:12px; opacity:.9; flex-wrap:wrap; }
-
 .dow-row { display:grid; grid-template-columns:repeat(7,1fr); background:#fff; border-bottom:1px solid var(--border); }
 .dow-cell { text-align:center; padding:8px 0; font-size:12px; font-weight:700; color:var(--muted); }
 .dow-sun { color:var(--red); }
 .dow-sat { color:#1a5276; }
-
 .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border); }
 .day-cell { background:var(--card); min-height:68px; padding:5px 3px 3px; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; user-select:none; }
 .day-cell.empty { background:var(--bg); cursor:default; }
@@ -82,13 +102,48 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
 .s-ng    { background:var(--red-pale);   color:var(--red); }
 .s-none  { border:1.5px dashed #ccc; }
 .time-badge { font-size:9px; color:var(--muted); text-align:center; line-height:1.3; white-space:pre; }
-
 .note-card { margin:12px 14px 0; background:var(--card); border-radius:var(--r); padding:14px; border:1px solid var(--border); }
 .note-lbl { font-size:11px; font-weight:700; letter-spacing:.1em; color:var(--muted); margin-bottom:8px; }
 .note-card textarea { width:100%; padding:10px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; background:var(--bg); color:var(--text); font-family:'Noto Sans JP',sans-serif; resize:none; height:68px; outline:none; }
 .submit-area { padding:14px; position:sticky; bottom:0; background:var(--bg); border-top:1px solid var(--border); }
 .submit-btn { display:block; width:100%; padding:16px; background:linear-gradient(135deg,var(--green),var(--green2)); color:#fff; border:none; border-radius:10px; font-family:'Noto Sans JP',sans-serif; font-size:15px; font-weight:700; cursor:pointer; }
 
+/* ── 確定シフト閲覧 ── */
+#screen-schedule.active { display:block; padding-bottom:40px; }
+.sch-header { background:var(--green); color:#fff; padding:16px; position:sticky; top:0; z-index:10; }
+.sch-header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.sch-title { font-size:16px; font-weight:700; }
+.sch-name-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.sch-tab { padding:6px 12px; border:1.5px solid rgba(255,255,255,.3); border-radius:20px; font-size:12px; font-weight:500; background:transparent; color:rgba(255,255,255,.7); cursor:pointer; font-family:'Noto Sans JP',sans-serif; }
+.sch-tab.active { background:rgba(255,255,255,.25); color:#fff; border-color:rgba(255,255,255,.6); font-weight:700; }
+.sch-tab-all { background:rgba(255,255,255,.15); }
+
+/* 確定シフトカレンダー */
+.sch-body { padding:12px; }
+.sch-cal-wrap { background:var(--card); border-radius:var(--r); overflow:hidden; border:1px solid var(--border); }
+.sch-dow-row { display:grid; grid-template-columns:repeat(7,1fr); background:var(--green); }
+.sch-dow-cell { text-align:center; padding:7px 0; font-size:11px; font-weight:700; color:rgba(255,255,255,.85); }
+.sch-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border); }
+.sch-cell { background:var(--card); min-height:64px; padding:4px 2px 3px; display:flex; flex-direction:column; align-items:center; gap:2px; }
+.sch-cell.empty { background:var(--bg); }
+.sch-num { font-size:12px; font-weight:600; width:20px; height:20px; display:flex; align-items:center; justify-content:center; }
+.sch-col-sun .sch-num { color:var(--red); }
+.sch-col-sat .sch-num { color:#1a5276; }
+.sch-today .sch-num { background:var(--amber); color:#fff; border-radius:50%; }
+/* 全員表示 */
+.sch-staff-list { display:flex; flex-direction:column; gap:1px; width:100%; }
+.sch-staff-row { display:flex; align-items:center; gap:2px; padding:0 2px; }
+.sch-name-mini { font-size:7px; color:var(--muted); width:18px; flex-shrink:0; overflow:hidden; white-space:nowrap; }
+.sch-work { font-size:9px; font-weight:700; color:var(--green); }
+.sch-off  { font-size:9px; color:#ccc; }
+/* 個人表示 */
+.sch-badge-lg { width:34px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+.sch-work-lg { background:var(--green-pale); color:var(--green); }
+.sch-time-sm { font-size:8px; color:var(--muted); text-align:center; line-height:1.3; white-space:pre; }
+
+.no-data { text-align:center; padding:40px 20px; color:var(--muted); font-size:13px; }
+
+/* ── モーダル共通 ── */
 .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:100; align-items:flex-end; justify-content:center; }
 .modal-overlay.open { display:flex; }
 .modal { background:var(--card); border-radius:16px 16px 0 0; padding:22px 18px 36px; width:100%; max-width:480px; }
@@ -99,7 +154,6 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
 .st-maybe { border-color:var(--amber);  background:var(--amber-pale); color:var(--amber); }
 .st-ng    { border-color:var(--red);    background:var(--red-pale);   color:var(--red); }
 .st-clear { background:var(--bg); color:var(--muted); }
-
 .time-lbl { font-size:12px; color:var(--muted); font-weight:500; margin-bottom:8px; }
 .preset-row { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
 .preset-btn { padding:8px 14px; border:1.5px solid var(--border); border-radius:20px; font-size:12px; background:var(--bg); color:var(--text); cursor:pointer; font-family:'Noto Sans JP',sans-serif; }
@@ -109,6 +163,7 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
 .modal-ok-btn { display:block; width:100%; padding:14px; background:var(--green); color:#fff; border:none; border-radius:10px; font-family:'Noto Sans JP',sans-serif; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:8px; }
 .modal-clr-btn { display:block; width:100%; padding:12px; background:var(--bg); color:var(--muted); border:1.5px solid var(--border); border-radius:10px; font-family:'Noto Sans JP',sans-serif; font-size:14px; cursor:pointer; }
 
+/* ── 完了画面 ── */
 #screen-done.active { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:40px 24px; text-align:center; }
 .done-icon { font-size:52px; margin-bottom:14px; }
 .done-title { font-size:22px; font-weight:700; color:var(--green); margin-bottom:20px; }
@@ -125,13 +180,39 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
 </head>
 <body>
 
-<div id="screen-name" class="screen active">
-  <div class="logo">SHIFT REQUEST</div>
-  <div class="screen-title">シフト希望入力</div>
-  <div class="screen-sub">名前を選んでください</div>
+<!-- ── トップ画面 ── -->
+<div id="screen-top" class="screen active">
+  <div class="top-logo">SHIFT SYSTEM</div>
+  <div class="top-title">シフト管理</div>
+  <div class="top-sub">何をしますか？</div>
+  <div class="top-buttons">
+    <button class="top-btn top-btn-primary" onclick="goToInput()">
+      <span class="top-btn-icon">✏️</span>
+      <span class="top-btn-text">
+        <span class="top-btn-label">シフト希望を入力する</span>
+        <span class="top-btn-desc">来月の出勤希望を入力</span>
+      </span>
+    </button>
+    <button class="top-btn top-btn-secondary" onclick="goToSchedule()">
+      <span class="top-btn-icon">📅</span>
+      <span class="top-btn-text">
+        <span class="top-btn-label">確定シフトを確認する</span>
+        <span class="top-btn-desc">今月・来月の確定シフトを表示</span>
+      </span>
+    </button>
+  </div>
+</div>
+
+<!-- ── 名前選択（希望入力用） ── -->
+<div id="screen-name" class="screen">
+  <div class="page-header" style="margin-top:60px;">
+    <button class="pg-back" onclick="showScreen('screen-top')">←</button>
+    <span class="pg-title">名前を選んでください</span>
+  </div>
   <div class="name-list" id="name-list"></div>
 </div>
 
+<!-- ── 希望入力カレンダー ── -->
 <div id="screen-calendar" class="screen">
   <div class="cal-header">
     <div class="cal-header-top">
@@ -146,9 +227,7 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
       </div>
     </div>
     <div class="legend">
-      <span>○ 出勤可</span>
-      <span>△ 応相談</span>
-      <span>× 出勤不可</span>
+      <span>○ 出勤可</span><span>△ 応相談</span><span>× 出勤不可</span>
     </div>
   </div>
   <div class="dow-row">
@@ -168,6 +247,27 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
   </div>
 </div>
 
+<!-- ── 確定シフト閲覧 ── -->
+<div id="screen-schedule" class="screen">
+  <div class="sch-header">
+    <div class="sch-header-top">
+      <button class="back-btn" onclick="showScreen('screen-top')">←</button>
+      <div class="cal-title">
+        <div class="cal-month-txt" id="sch-month"></div>
+      </div>
+      <div class="month-nav">
+        <button class="month-btn" onclick="schChangeMonth(-1)">‹</button>
+        <button class="month-btn" onclick="schChangeMonth(1)">›</button>
+      </div>
+    </div>
+    <div class="sch-name-tabs" id="sch-name-tabs"></div>
+  </div>
+  <div class="sch-body" id="sch-body">
+    <div class="no-data">確定シフトのデータがありません</div>
+  </div>
+</div>
+
+<!-- ── モーダル: ステータス選択 ── -->
 <div class="modal-overlay" id="modal-status" onclick="closeStOutside(event)">
   <div class="modal">
     <div class="modal-date" id="st-label"></div>
@@ -180,6 +280,7 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
   </div>
 </div>
 
+<!-- ── モーダル: 時間入力 ── -->
 <div class="modal-overlay" id="modal-time" onclick="closeTmOutside(event)">
   <div class="modal">
     <div class="modal-date" id="tm-label"></div>
@@ -189,15 +290,14 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
       <button class="preset-btn" onclick="setPreset(this,'07:00','17:00')">終日 7-17時</button>
     </div>
     <div class="time-row">
-      <input type="time" id="t-start">
-      <span>〜</span>
-      <input type="time" id="t-end">
+      <input type="time" id="t-start"><span>〜</span><input type="time" id="t-end">
     </div>
     <button class="modal-ok-btn"  onclick="closeTimeModal()">確定</button>
     <button class="modal-clr-btn" onclick="clearFromTime()">空白に戻す</button>
   </div>
 </div>
 
+<!-- ── 完了画面 ── -->
 <div id="screen-done" class="screen">
   <div class="done-icon">🌱</div>
   <div class="done-title">送信完了しました</div>
@@ -214,19 +314,38 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
 var STAFF   = ['野口','吉田','磯村','音光寺','原'];
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbzl1qFI1sruGRg1kUm-ZuM4InTZobs8Xo6AkmZO0EP8jzPw0tfNbFtFvL205dJNCWYi-w/exec';
 var DOWS    = ['日','月','火','水','木','金','土'];
+
+// 希望入力用
 var currentName='', currentYear=0, currentMonth=0, dayData={}, editingDate='';
 
+// 確定シフト閲覧用
+var schYear=0, schMonth=0, schSelectedName='all', schData=[];
+
+function pad(n){ return String(n).padStart(2,'0'); }
+
+/* ── ローカルストレージ ── */
 function lsSave(){try{localStorage.setItem('sh_'+currentName+'_'+currentYear+'_'+currentMonth,JSON.stringify(dayData));}catch(e){}}
 function lsLoad(n,y,m){try{var v=localStorage.getItem('sh_'+n+'_'+y+'_'+m);return v?JSON.parse(v):{};}catch(e){return {};}}
+function lsHas(n){try{for(var k in localStorage){if(k.indexOf('sh_'+n+'_')===0)return true;}return false;}catch(e){return false;}}
 
-
+/* ── 画面切替 ── */
+var ALL_SCREENS=['screen-top','screen-name','screen-calendar','screen-schedule','screen-done'];
 function showScreen(id){
-  ['screen-name','screen-calendar','screen-done'].forEach(function(s){
-    document.getElementById(s).classList.remove('active');
-  });
+  ALL_SCREENS.forEach(function(s){ document.getElementById(s).classList.remove('active'); });
   document.getElementById(id).classList.add('active');
 }
 
+/* ── トップ ── */
+function goToInput(){ showScreen('screen-name'); }
+function goToSchedule(){
+  var now=new Date();
+  schYear=now.getFullYear(); schMonth=now.getMonth()+1;
+  schSelectedName='all';
+  showScreen('screen-schedule');
+  loadSchedule();
+}
+
+/* ── 名前リスト生成（希望入力用） ── */
 function buildNameList(){
   var list=document.getElementById('name-list');
   list.innerHTML='';
@@ -236,12 +355,13 @@ function buildNameList(){
     var av=document.createElement('div'); av.className='name-avatar'; av.textContent=name[0];
     var nm=document.createElement('span'); nm.textContent=name;
     btn.appendChild(av); btn.appendChild(nm);
-
+    if(lsHas(name)){var bd=document.createElement('span');bd.className='saved-badge';bd.textContent='保存済';btn.appendChild(bd);}
     btn.onclick=function(){startCalendar(name);};
     list.appendChild(btn);
   });
 }
 
+/* ── 希望入力カレンダー ── */
 function startCalendar(name){
   currentName=name;
   var now=new Date();
@@ -253,7 +373,7 @@ function startCalendar(name){
   showScreen('screen-calendar');
 }
 
-function goBack(){showScreen('screen-name');}
+function goBack(){ showScreen('screen-name'); }
 
 function changeMonth(d){
   currentMonth+=d;
@@ -262,8 +382,6 @@ function changeMonth(d){
   dayData=lsLoad(currentName,currentYear,currentMonth);
   renderCalendar();
 }
-
-function pad(n){return String(n).padStart(2,'0');}
 
 function renderCalendar(){
   document.getElementById('cal-month').textContent=currentYear+'年'+currentMonth+'月';
@@ -278,10 +396,7 @@ function renderCalendar(){
     var dow=(firstDay+d-1)%7;
     var isToday=today.getFullYear()===currentYear&&today.getMonth()===currentMonth-1&&today.getDate()===d;
     var cell=document.createElement('div');
-    var cls='day-cell';
-    if(dow===0)cls+=' col-sun';
-    if(dow===6)cls+=' col-sat';
-    if(isToday)cls+=' day-today';
+    var cls='day-cell'+(dow===0?' col-sun':dow===6?' col-sat':'')+(isToday?' day-today':'');
     cell.className=cls;
     (function(date){cell.onclick=function(){openModal(date);};})(ds);
     var num=document.createElement('div');num.className='day-num';num.textContent=d;cell.appendChild(num);
@@ -343,7 +458,6 @@ function clearPresets(){document.querySelectorAll('.preset-btn').forEach(functio
 
 function handleSubmit(){
   var okN=0,maybeN=0,ngN=0,days=[];
-  // その月の全日付を生成して送信
   var lastDate=new Date(currentYear,currentMonth,0).getDate();
   for(var d=1;d<=lastDate;d++){
     var ds=currentYear+'-'+pad(currentMonth)+'-'+pad(d);
@@ -351,9 +465,7 @@ function handleSubmit(){
     var status=v?v.status:'none';
     var start=v?v.start||'':'';
     var end=v?v.end||'':'';
-    if(status==='ok')okN++;
-    if(status==='maybe')maybeN++;
-    if(status==='ng')ngN++;
+    if(status==='ok')okN++;if(status==='maybe')maybeN++;if(status==='ng')ngN++;
     days.push({date:ds,status:status,start:start,end:end});
   }
   var note=document.getElementById('global-note').value;
@@ -369,7 +481,127 @@ function handleSubmit(){
 
 function resetAll(){
   dayData={};document.getElementById('global-note').value='';
-  buildNameList();showScreen('screen-name');window.scrollTo(0,0);
+  buildNameList();showScreen('screen-top');window.scrollTo(0,0);
+}
+
+/* ── 確定シフト閲覧 ── */
+function schChangeMonth(d){
+  schMonth+=d;
+  if(schMonth>12){schMonth=1;schYear++;}
+  if(schMonth<1){schMonth=12;schYear--;}
+  loadSchedule();
+}
+
+function loadSchedule(){
+  document.getElementById('sch-month').textContent=schYear+'年'+schMonth+'月';
+  var ym=schYear+'-'+pad(schMonth);
+  // GASから確定シフトを取得（明日GAS対応後に有効化）
+  // 現時点では空データで表示
+  schData=[];
+  renderSchedule();
+
+  /* GAS対応後はこちらを使用:
+  fetch(GAS_URL+'?type=confirmed&yearMonth='+ym)
+    .then(function(r){return r.json();})
+    .then(function(d){schData=d.data||[];renderSchedule();})
+    .catch(function(){renderSchedule();});
+  */
+}
+
+function buildSchTabs(){
+  var tabs=document.getElementById('sch-name-tabs');
+  tabs.innerHTML='';
+  var allBtn=document.createElement('button');
+  allBtn.className='sch-tab sch-tab-all'+(schSelectedName==='all'?' active':'');
+  allBtn.textContent='全員';
+  allBtn.onclick=function(){schSelectedName='all';buildSchTabs();renderSchedule();};
+  tabs.appendChild(allBtn);
+  STAFF.forEach(function(name){
+    var btn=document.createElement('button');
+    btn.className='sch-tab'+(schSelectedName===name?' active':'');
+    btn.textContent=name;
+    btn.onclick=function(){schSelectedName=name;buildSchTabs();renderSchedule();};
+    tabs.appendChild(btn);
+  });
+}
+
+function renderSchedule(){
+  buildSchTabs();
+  var body=document.getElementById('sch-body');
+  if(schData.length===0){
+    body.innerHTML='<div class="no-data">確定シフトのデータがありません<br><span style="font-size:11px">管理者が確定シフトを入力すると表示されます</span></div>';
+    return;
+  }
+  // データをname×dateでインデックス化
+  var idx={};
+  var ym=schYear+'-'+pad(schMonth);
+  schData.forEach(function(row){
+    if(!idx[row.name]) idx[row.name]={};
+    idx[row.name][row.date]={start:row.start,end:row.end};
+  });
+
+  var html='';
+  if(schSelectedName==='all'){
+    html=buildSchCalAll(idx);
+  } else {
+    html=buildSchCalSingle(idx[schSelectedName]||{});
+  }
+  body.innerHTML=html;
+}
+
+function buildSchCalAll(idx){
+  var firstDay=new Date(schYear,schMonth-1,1).getDay();
+  var lastDate=new Date(schYear,schMonth,0).getDate();
+  var today=new Date();
+  var html='<div class="sch-cal-wrap"><div class="sch-dow-row">';
+  ['日','月','火','水','木','金','土'].forEach(function(d,i){
+    html+='<div class="sch-dow-cell">'+d+'</div>';
+  });
+  html+='</div><div class="sch-grid">';
+  for(var i=0;i<firstDay;i++) html+='<div class="sch-cell empty"></div>';
+  for(var d=1;d<=lastDate;d++){
+    var ds=schYear+'-'+pad(schMonth)+'-'+pad(d);
+    var dow=(firstDay+d-1)%7;
+    var isToday=today.getFullYear()===schYear&&today.getMonth()===schMonth-1&&today.getDate()===d;
+    var cls='sch-cell'+(dow===0?' sch-col-sun':dow===6?' sch-col-sat':'')+(isToday?' sch-today':'');
+    html+='<div class="'+cls+'"><div class="sch-num">'+d+'</div><div class="sch-staff-list">';
+    STAFF.forEach(function(name){
+      var v=(idx[name]||{})[ds];
+      if(v){
+        html+='<div class="sch-staff-row"><span class="sch-name-mini">'+name[0]+'</span><span class="sch-work">●</span></div>';
+      }
+    });
+    html+='</div></div>';
+  }
+  html+='</div></div>';
+  return html;
+}
+
+function buildSchCalSingle(data){
+  var firstDay=new Date(schYear,schMonth-1,1).getDay();
+  var lastDate=new Date(schYear,schMonth,0).getDate();
+  var today=new Date();
+  var html='<div class="sch-cal-wrap"><div class="sch-dow-row">';
+  ['日','月','火','水','木','金','土'].forEach(function(d,i){
+    html+='<div class="sch-dow-cell">'+d+'</div>';
+  });
+  html+='</div><div class="sch-grid">';
+  for(var i=0;i<firstDay;i++) html+='<div class="sch-cell empty"></div>';
+  for(var d=1;d<=lastDate;d++){
+    var ds=schYear+'-'+pad(schMonth)+'-'+pad(d);
+    var dow=(firstDay+d-1)%7;
+    var isToday=today.getFullYear()===schYear&&today.getMonth()===schMonth-1&&today.getDate()===d;
+    var cls='sch-cell'+(dow===0?' sch-col-sun':dow===6?' sch-col-sat':'')+(isToday?' sch-today':'');
+    html+='<div class="'+cls+'"><div class="sch-num">'+d+'</div>';
+    var v=data[ds];
+    if(v){
+      html+='<div class="sch-badge-lg sch-work-lg">出</div>';
+      if(v.start&&v.end) html+='<div class="sch-time-sm">'+v.start+'\n'+v.end+'</div>';
+    }
+    html+='</div>';
+  }
+  html+='</div></div>';
+  return html;
 }
 
 buildNameList();
