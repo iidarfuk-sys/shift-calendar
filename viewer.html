@@ -108,7 +108,15 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
 .staff-check-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
 .staff-check-btn  { padding:10px 4px; border:2px solid var(--border); border-radius:8px; font-family:'Noto Sans JP',sans-serif; font-size:13px; font-weight:500; cursor:pointer; text-align:center; background:var(--bg); color:var(--muted); }
 .staff-check-btn.selected { border-color:var(--green); background:var(--green-pale); color:var(--green); font-weight:700; }
-.staff-hint { font-size:10px; color:var(--muted); margin-top:2px; } /* 希望ステータス表示用 */
+.staff-hint { font-size:10px; color:var(--muted); margin-top:2px; }
+
+/* 個人別時間設定 */
+.staff-time-list { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; max-height:300px; overflow-y:auto; }
+.staff-time-row  { background:var(--bg); border-radius:10px; padding:10px 12px; border:1.5px solid var(--border); }
+.staff-time-name { font-size:13px; font-weight:700; color:var(--green); margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; }
+.staff-time-hint { font-size:11px; color:var(--muted); font-weight:400; }
+.staff-time-inputs { display:flex; align-items:center; gap:6px; }
+.staff-time-inputs input[type=time] { flex:1; padding:8px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; background:var(--card); color:var(--text); outline:none; font-family:'Noto Sans JP',sans-serif; }
 
 /* 時間入力 */
 .time-presets { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
@@ -153,19 +161,32 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
 <div class="modal-overlay" id="modal-kakutei" onclick="closeKakuteiOutside(event)">
   <div class="modal">
     <div class="modal-date" id="kk-date-label"></div>
-    <div class="modal-sub">出勤するスタッフを選んでください</div>
-    <div class="modal-section-lbl">スタッフ</div>
-    <div class="staff-check-grid" id="kk-staff-grid"></div>
-    <div class="modal-section-lbl">時間帯（全員共通）</div>
-    <div class="time-presets">
-      <button class="preset-btn" onclick="setKkPreset(this,'07:00','12:00')">午前中 7-12時</button>
-      <button class="preset-btn" onclick="setKkPreset(this,'07:00','17:00')">終日 7-17時</button>
+
+    <!-- Step1: スタッフ選択 -->
+    <div id="kk-step1">
+      <div class="modal-sub">出勤するスタッフを選んでください</div>
+      <div class="modal-section-lbl">スタッフ（複数選択可）</div>
+      <div class="staff-check-grid" id="kk-staff-grid"></div>
+      <div class="modal-section-lbl">一括時間設定（任意）</div>
+      <div class="time-presets">
+        <button class="preset-btn" onclick="setKkPresetAll(this,'07:00','12:00')">午前中 7-12時</button>
+        <button class="preset-btn" onclick="setKkPresetAll(this,'07:00','17:00')">終日 7-17時</button>
+      </div>
+      <div class="time-row">
+        <input type="time" id="kk-start-all"><span>〜</span><input type="time" id="kk-end-all">
+        <button onclick="applyTimeAll()" style="padding:8px 10px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;white-space:nowrap;">全員に適用</button>
+      </div>
+      <button class="modal-ok-btn" onclick="goKkStep2()">時間を個別設定する →</button>
+      <button class="modal-clr-btn" onclick="clearKakuteiDay()">この日をクリア</button>
     </div>
-    <div class="time-row">
-      <input type="time" id="kk-start"><span>〜</span><input type="time" id="kk-end">
+
+    <!-- Step2: 個人別時間設定 -->
+    <div id="kk-step2" style="display:none;">
+      <div class="modal-sub">スタッフごとに時間を設定してください</div>
+      <div class="staff-time-list" id="kk-time-list"></div>
+      <button class="modal-ok-btn" onclick="saveKakuteiDay()">確定</button>
+      <button class="modal-clr-btn" onclick="goKkStep1()">← スタッフ選択に戻る</button>
     </div>
-    <button class="modal-ok-btn"  onclick="saveKakuteiDay()">確定</button>
-    <button class="modal-clr-btn" onclick="clearKakuteiDay()">この日をクリア</button>
   </div>
 </div>
 
@@ -231,8 +252,10 @@ function loadData(){
     if(!kibouDone||!kakuteiDone) return;
     // 確定シフトをeditにコピー
     kakuteiData.forEach(function(row){
-      if(!kakuteiEdit[row.date]) kakuteiEdit[row.date]={staffList:[],start:row.start,end:row.end};
+      if(!kakuteiEdit[row.date]) kakuteiEdit[row.date]={staffList:[],staffTimes:{}};
       if(kakuteiEdit[row.date].staffList.indexOf(row.name)<0) kakuteiEdit[row.date].staffList.push(row.name);
+      if(!kakuteiEdit[row.date].staffTimes) kakuteiEdit[row.date].staffTimes={};
+      kakuteiEdit[row.date].staffTimes[row.name]={start:row.start,end:row.end};
     });
     document.getElementById('loading').style.display='none';
     document.getElementById('main-view').style.display='block';
@@ -420,9 +443,13 @@ function buildCalKakutei(kibouIdx){
     html+='<div class="day-num">'+d+'</div>';
     if(conf&&conf.staffList&&conf.staffList.length>0){
       html+='<div class="conf-staff-badges">';
-      conf.staffList.forEach(function(name){ html+='<div class="conf-staff-row"><span class="conf-dot"></span><span class="conf-name">'+name[0]+'</span></div>'; });
+      conf.staffList.forEach(function(name){
+        var t=(conf.staffTimes&&conf.staffTimes[name])||{};
+        var timeStr='';
+        if(t.start&&t.end) timeStr=(t.start.replace(/^0/,''))+'~'+(t.end.replace(/^0/,''));
+        html+='<div class="conf-staff-row"><span class="conf-dot"></span><span class="conf-name">'+name[0]+(timeStr?'<span style="font-size:6px;color:var(--muted)"> '+timeStr+'</span>':'')+'</span></div>';
+      });
       html+='</div>';
-      if(conf.start&&conf.end) html+='<div style="font-size:8px;color:var(--muted);text-align:center;line-height:1.2">'+conf.start+'<br>'+conf.end+'</div>';
     } else {
       html+='<div class="confirmed-badge cb-empty">+</div>';
     }
@@ -439,43 +466,93 @@ function openKakuteiModal(date){
   var p=date.split('-');
   var dow=DOWS[new Date(+p[0],+p[1]-1,+p[2]).getDay()];
   document.getElementById('kk-date-label').textContent=+p[1]+'月'+p[2]+'日（'+dow+'）';
+  goKkStep1();
+  document.getElementById('modal-kakutei').classList.add('open');
+}
 
-  var conf=kakuteiEdit[date]||{staffList:[],start:'',end:''};
-  document.getElementById('kk-start').value=conf.start||'';
-  document.getElementById('kk-end').value=conf.end||'';
+function goKkStep1(){
+  var conf=kakuteiEdit[editingDate]||{staffList:[],staffTimes:{}};
+  document.getElementById('kk-start-all').value='';
+  document.getElementById('kk-end-all').value='';
   clearKkPresets();
 
-  // スタッフボタン生成（希望ステータスも表示）
+  // スタッフボタン生成
   var kibouIdx=buildKibouIndex();
   var grid=document.getElementById('kk-staff-grid');
   grid.innerHTML='';
   STAFF.forEach(function(name){
     var btn=document.createElement('button');
-    btn.className='staff-check-btn'+(conf.staffList.indexOf(name)>=0?' selected':'');
-    var kibou=(kibouIdx[name]||{})[date];
+    var isSelected=conf.staffList.indexOf(name)>=0;
+    btn.className='staff-check-btn'+(isSelected?' selected':'');
+    var kibou=(kibouIdx[name]||{})[editingDate];
     var hint=kibou?statusChar(kibou.status).ch:'';
     btn.innerHTML=name+(hint?'<div class="staff-hint">'+hint+'</div>':'');
     btn.onclick=function(){btn.classList.toggle('selected');};
     grid.appendChild(btn);
   });
 
-  document.getElementById('modal-kakutei').classList.add('open');
+  document.getElementById('kk-step1').style.display='block';
+  document.getElementById('kk-step2').style.display='none';
+}
+
+function goKkStep2(){
+  // 選択されたスタッフを取得
+  var selected=[];
+  document.querySelectorAll('#kk-staff-grid .staff-check-btn.selected').forEach(function(btn){
+    selected.push(btn.textContent.replace(/[○△×\n]/g,'').trim());
+  });
+  if(selected.length===0){
+    clearKakuteiDay();
+    return;
+  }
+
+  // 一括時間をデフォルトとして設定
+  var bulkStart=document.getElementById('kk-start-all').value;
+  var bulkEnd=document.getElementById('kk-end-all').value;
+  var conf=kakuteiEdit[editingDate]||{staffList:[],staffTimes:{}};
+
+  // 個人別時間リストを生成
+  var list=document.getElementById('kk-time-list');
+  list.innerHTML='';
+  selected.forEach(function(name){
+    var prev=(conf.staffTimes&&conf.staffTimes[name])||{};
+    var s=prev.start||bulkStart||'';
+    var e=prev.end||bulkEnd||'';
+    var row=document.createElement('div');
+    row.className='staff-time-row';
+    row.innerHTML=
+      '<div class="staff-time-name">'+name+'</div>'+
+      '<div class="staff-time-inputs">'+
+        '<input type="time" id="st-s-'+name+'" value="'+s+'">'+
+        '<span>〜</span>'+
+        '<input type="time" id="st-e-'+name+'" value="'+e+'">'+
+      '</div>';
+    list.appendChild(row);
+  });
+
+  // selectedをdatasetに保存
+  list.dataset.selected=JSON.stringify(selected);
+
+  document.getElementById('kk-step1').style.display='none';
+  document.getElementById('kk-step2').style.display='block';
 }
 
 function closeKakuteiOutside(e){ if(e.target.id==='modal-kakutei') document.getElementById('modal-kakutei').classList.remove('open'); }
 
 function saveKakuteiDay(){
-  var selected=[];
-  document.querySelectorAll('#kk-staff-grid .staff-check-btn.selected').forEach(function(btn){
-    selected.push(btn.textContent.replace(/[○△×]/g,'').trim());
+  var list=document.getElementById('kk-time-list');
+  var selected=JSON.parse(list.dataset.selected||'[]');
+  if(selected.length===0){ clearKakuteiDay(); return; }
+
+  var staffTimes={};
+  selected.forEach(function(name){
+    staffTimes[name]={
+      start: document.getElementById('st-s-'+name).value,
+      end:   document.getElementById('st-e-'+name).value
+    };
   });
-  var start=document.getElementById('kk-start').value;
-  var end=document.getElementById('kk-end').value;
-  if(selected.length>0){
-    kakuteiEdit[editingDate]={staffList:selected,start:start,end:end};
-  } else {
-    delete kakuteiEdit[editingDate];
-  }
+
+  kakuteiEdit[editingDate]={staffList:selected, staffTimes:staffTimes};
   kakuteiDirty=true;
   document.getElementById('modal-kakutei').classList.remove('open');
   renderView();
@@ -488,11 +565,24 @@ function clearKakuteiDay(){
   renderView();
 }
 
-function setKkPreset(btn,s,e){
+function setKkPresetAll(btn,s,e){
   clearKkPresets(); btn.classList.add('active');
-  document.getElementById('kk-start').value=s;
-  document.getElementById('kk-end').value=e;
+  document.getElementById('kk-start-all').value=s;
+  document.getElementById('kk-end-all').value=e;
 }
+
+function applyTimeAll(){
+  var s=document.getElementById('kk-start-all').value;
+  var e=document.getElementById('kk-end-all').value;
+  document.querySelectorAll('#kk-staff-grid .staff-check-btn.selected').forEach(function(btn){
+    var name=btn.textContent.replace(/[○△×\n]/g,'').trim();
+    var si=document.getElementById('st-s-'+name);
+    var ei=document.getElementById('st-e-'+name);
+    if(si) si.value=s;
+    if(ei) ei.value=e;
+  });
+}
+
 function clearKkPresets(){ document.querySelectorAll('.preset-btn').forEach(function(b){b.classList.remove('active');}); }
 
 /* ── 確定シフト保存 ── */
@@ -503,7 +593,8 @@ function saveAllKakutei(){
   Object.keys(kakuteiEdit).forEach(function(date){
     var conf=kakuteiEdit[date];
     conf.staffList.forEach(function(name){
-      shifts.push({date:date,name:name,start:conf.start||'',end:conf.end||'',memo:''});
+      var t=(conf.staffTimes&&conf.staffTimes[name])||{};
+      shifts.push({date:date,name:name,start:t.start||'',end:t.end||'',memo:''});
     });
   });
   fetch(GAS_URL,{
