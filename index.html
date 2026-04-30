@@ -242,8 +242,8 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
     <div class="note-lbl">備考・コメント</div>
     <textarea id="global-note" placeholder="特記事項があれば入力してください"></textarea>
   </div>
-  <div class="submit-area">
-    <button class="submit-btn" onclick="handleSubmit()">✓ 希望を送信する</button>
+  <div class="submit-area" id="submit-area">
+    <button class="submit-btn" id="submit-btn" onclick="handleSubmit()">✓ 希望を送信する</button>
   </div>
 </div>
 
@@ -307,7 +307,10 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
     <div class="count-item c-ng"><div class="count-num" id="cnt-ng">0</div><div class="count-lbl">× 出勤不可</div></div>
   </div>
   <div class="done-summary" id="done-summary"></div>
-  <button class="reset-btn" onclick="resetAll()">最初に戻る</button>
+  <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;">
+    <button class="submit-btn" onclick="goToEdit()" style="background:linear-gradient(135deg,var(--amber),#e09020);">✏️ 修正する</button>
+    <button class="reset-btn" onclick="resetAll()">最初に戻る</button>
+  </div>
 </div>
 
 <script>
@@ -345,6 +348,30 @@ function goToSchedule(){
   loadSchedule();
 }
 
+/* 完了画面→修正する */
+function goToEdit(){
+  updateSubmitBtn();
+  showScreen('screen-calendar');
+  window.scrollTo(0,0);
+}
+
+/* 送信済みかどうかでボタンを切り替え */
+function updateSubmitBtn(){
+  var sent = lsSent(currentName, currentYear, currentMonth);
+  var btn = document.getElementById('submit-btn');
+  if(sent){
+    btn.textContent='✓ 修正して再送信する';
+    btn.style.background='linear-gradient(135deg,var(--amber),#e09020)';
+  } else {
+    btn.textContent='✓ 希望を送信する';
+    btn.style.background='';
+  }
+}
+
+/* 送信済みフラグ */
+function lsSent(n,y,m){try{return !!localStorage.getItem('sent_'+n+'_'+y+'_'+m);}catch(e){return false;}}
+function lsMarkSent(n,y,m){try{localStorage.setItem('sent_'+n+'_'+y+'_'+m,'1');}catch(e){}}
+
 /* ── 名前リスト生成（希望入力用） ── */
 function buildNameList(){
   var list=document.getElementById('name-list');
@@ -369,6 +396,7 @@ function startCalendar(name){
   dayData=lsLoad(name,currentYear,currentMonth);
   document.getElementById('cal-who').textContent=name+' さん';
   renderCalendar();
+  updateSubmitBtn();
   showScreen('screen-calendar');
 }
 
@@ -474,6 +502,7 @@ function handleSubmit(){
   document.getElementById('cnt-ng').textContent=ngN;
   document.getElementById('done-summary').textContent=currentName+' さん / '+currentYear+'年'+currentMonth+'月'+(note?'\n備考：'+note:'');
   lsSave();
+  lsMarkSent(currentName, currentYear, currentMonth);
   fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:currentName,yearMonth:ym,note:note,days:days})}).catch(function(e){});
   showScreen('screen-done');window.scrollTo(0,0);
 }
