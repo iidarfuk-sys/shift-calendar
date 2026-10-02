@@ -128,6 +128,8 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
 .time-row { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
 .time-row input[type=time] { flex:1; padding:10px; border:1.5px solid var(--border); border-radius:8px; font-size:14px; background:var(--bg); color:var(--text); outline:none; font-family:'Noto Sans JP',sans-serif; }
 .modal-ok-btn  { display:block; width:100%; padding:14px; background:var(--green); color:#fff; border:none; border-radius:10px; font-family:'Noto Sans JP',sans-serif; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:8px; }
+.modal-closed-btn { display:block; width:100%; padding:12px; background:var(--red-pale); color:var(--red); border:1.5px solid var(--red); border-radius:10px; font-family:'Noto Sans JP',sans-serif; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:8px; }
+.closed-badge { margin-top:4px; font-size:9px; font-weight:700; color:var(--red); background:var(--red-pale); border-radius:4px; padding:2px 0; text-align:center; }
 .modal-clr-btn { display:block; width:100%; padding:12px; background:var(--bg); color:var(--muted); border:1.5px solid var(--border); border-radius:10px; font-family:'Noto Sans JP',sans-serif; font-size:14px; cursor:pointer; }
 
 /* 保存ボタン（固定） */
@@ -180,6 +182,7 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
         <button onclick="applyTimeAll()" style="padding:8px 10px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;white-space:nowrap;">全員に適用</button>
       </div>
       <button class="modal-ok-btn" onclick="goKkStep2()">時間を個別設定する →</button>
+      <button class="modal-closed-btn" onclick="setClosedDay()">🚫 この日を休業にする</button>
       <button class="modal-clr-btn" onclick="clearKakuteiDay()">この日をクリア</button>
     </div>
 
@@ -201,6 +204,7 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--
 <script>
 var GAS_URL       = 'https://script.google.com/macros/s/AKfycbzl1qFI1sruGRg1kUm-ZuM4InTZobs8Xo6AkmZO0EP8jzPw0tfNbFtFvL205dJNCWYi-w/exec';
 var STAFF         = ['野口','吉田','原','野中','徳永','石崎','丁'];
+var CLOSED_NAME   = '休業'; // 休業日は確定シフトに name='休業' の行として保存
 var DOWS          = ['日','月','火','水','木','金','土'];
 var currentMode   = 'kibou-all';
 var selectedStaff = STAFF[0];
@@ -255,6 +259,8 @@ function loadData(){
     if(!kibouDone||!kakuteiDone) return;
     // 確定シフトをeditにコピー
     kakuteiData.forEach(function(row){
+      if(row.name===CLOSED_NAME){ kakuteiEdit[row.date]={closed:true,staffList:[],staffTimes:{}}; return; }
+      if(kakuteiEdit[row.date]&&kakuteiEdit[row.date].closed) return;
       if(!kakuteiEdit[row.date]) kakuteiEdit[row.date]={staffList:[],staffTimes:{}};
       if(kakuteiEdit[row.date].staffList.indexOf(row.name)<0) kakuteiEdit[row.date].staffList.push(row.name);
       if(!kakuteiEdit[row.date].staffTimes) kakuteiEdit[row.date].staffTimes={};
@@ -368,7 +374,7 @@ function selectStaff(name){ selectedStaff=name; renderView(); }
 /* ── 確定シフト入力表示 ── */
 function renderKakuteiEdit(){
   var idx=buildKibouIndex();
-  var html='<div class="legend"><span>日付をタップして出勤スタッフを設定</span></div>';
+  var html='<div class="legend"><span>日付をタップして出勤スタッフ・休業日を設定</span></div>';
   html+=buildCalKakutei(idx);
   return html;
 }
@@ -444,7 +450,9 @@ function buildCalKakutei(kibouIdx){
     var conf=kakuteiEdit[ds];
     html+='<div class="'+cls+'" onclick="openKakuteiModal(\''+ds+'\')">';
     html+='<div class="day-num">'+d+'</div>';
-    if(conf&&conf.staffList&&conf.staffList.length>0){
+    if(conf&&conf.closed){
+      html+='<div class="closed-badge">休業</div>';
+    } else if(conf&&conf.staffList&&conf.staffList.length>0){
       html+='<div class="conf-staff-badges">';
       conf.staffList.forEach(function(name){
         var t=(conf.staffTimes&&conf.staffTimes[name])||{};
@@ -561,6 +569,13 @@ function saveKakuteiDay(){
   renderView();
 }
 
+function setClosedDay(){
+  kakuteiEdit[editingDate]={closed:true,staffList:[],staffTimes:{}};
+  kakuteiDirty=true;
+  document.getElementById('modal-kakutei').classList.remove('open');
+  renderView();
+}
+
 function clearKakuteiDay(){
   delete kakuteiEdit[editingDate];
   kakuteiDirty=true;
@@ -595,6 +610,7 @@ function saveAllKakutei(){
   var shifts=[];
   Object.keys(kakuteiEdit).forEach(function(date){
     var conf=kakuteiEdit[date];
+    if(conf.closed){ shifts.push({date:date,name:CLOSED_NAME,start:'',end:'',memo:''}); return; }
     conf.staffList.forEach(function(name){
       var t=(conf.staffTimes&&conf.staffTimes[name])||{};
       shifts.push({date:date,name:name,start:t.start||'',end:t.end||'',memo:''});

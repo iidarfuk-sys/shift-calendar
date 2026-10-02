@@ -561,21 +561,28 @@ function renderSchedule(){
   // データをname×dateでインデックス化
   var idx={};
   var ym=schYear+'-'+pad(schMonth);
+  var closedDays={};
   schData.forEach(function(row){
+    if(row.name==='休業'){ closedDays[normSchDate(row.date)]=true; return; }
     if(!idx[row.name]) idx[row.name]={};
     idx[row.name][row.date]={start:row.start,end:row.end};
   });
 
   var html='';
   if(schSelectedName==='all'){
-    html=buildSchCalAll(idx);
+    html=buildSchCalAll(idx,closedDays);
   } else {
     html=buildSchCalSingle(idx[schSelectedName]||{});
   }
   body.innerHTML=html;
 }
 
-function buildSchCalAll(idx){
+function normSchDate(raw){
+  var s=String(raw).trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(s)?s:s.replace(/\//g,'-').substring(0,10);
+}
+
+function buildSchCalAll(idx,closedDays){
   var firstDay=new Date(schYear,schMonth-1,1).getDay();
   var lastDate=new Date(schYear,schMonth,0).getDate();
   var today=new Date();
@@ -591,6 +598,7 @@ function buildSchCalAll(idx){
     var isToday=today.getFullYear()===schYear&&today.getMonth()===schMonth-1&&today.getDate()===d;
     var cls='sch-cell'+(dow===0?' sch-col-sun':dow===6?' sch-col-sat':'')+(isToday?' sch-today':'');
     html+='<div class="'+cls+'"><div class="sch-num">'+d+'</div><div class="sch-staff-list">';
+    if(closedDays&&closedDays[ds]) html+='<div class="sch-staff-row" style="color:#c0392b;font-weight:700;font-size:10px;">休業</div>';
     STAFF.forEach(function(name){
       var v=(idx[name]||{})[ds];
       if(v){
